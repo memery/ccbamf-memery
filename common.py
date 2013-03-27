@@ -1,4 +1,6 @@
+import json
 import multiprocessing
+import os
 import queue
 
 
@@ -30,11 +32,19 @@ class Actor(multiprocessing.Process):
         while self.running:
             self.main_loop(self.inbox.read())
 
+        self.terminate()
+
     def initialize(self):
         pass
 
     def main_loop(self, message):
         pass
+
+    def terminate(self):
+        pass
+
+    def stop(self):
+        self.running = False
 
     def write_to(self, message):
         self.inbox.write(message)
@@ -43,7 +53,18 @@ class Actor(multiprocessing.Process):
         self.parent_inbox.write(message)
 
 
-def spawn_actor(actor_constructor, parent_inbox=None):
-    actor = actor_constructor(parent_inbox)
+def spawn_actor(actor_constructor, parent_inbox, *args):
+    actor = actor_constructor(parent_inbox, *args)
     actor.start()
     return actor
+
+
+def read_json(text):
+    without_comments = [line for line in text.splitlines()
+                        if not line.startswith('#')]
+    return json.loads('\n'.join(without_comments))
+
+def read_file_or_die(fname):
+    """ Read a file and return the raw data. Throws exception if it doesn't exist. """
+    with open(fname, encoding='utf-8') as f:
+        return f.read()
