@@ -7,6 +7,7 @@ class IRCMainActor(Actor):
         self.daemon = False
 
     def initialize(self):
+        self.wait_for_message = False
         self.irc_settings = read_json(read_file_or_die('config/irc/irc.json'))
         self.networks = read_json(read_file_or_die('config/irc/networks.json'))
 
@@ -27,6 +28,7 @@ class IRCMainActor(Actor):
                 self.children[network] = \
                     spawn_actor(IRCConnectionActor, self.inbox,
                                 self.networks[network], self.irc_settings)
+
 
 
         # if there are no more children that are supposed to run,

@@ -63,6 +63,7 @@ class IRCConnectionActor(common.Actor):
         self.irc_settings = irc_settings
 
     def initialize(self):
+        self.wait_for_message = False
         try:
             # create a new line-buffered socket thingey
             self.irc = Socket(

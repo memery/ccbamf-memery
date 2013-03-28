@@ -24,6 +24,7 @@ class Actor(multiprocessing.Process):
         self.parent_inbox = parent_inbox
 
         self.daemon = True # Temporary
+        self.wait_for_message = True
         self.constructor(*args)
 
     def constructor(self, *args):
@@ -34,7 +35,11 @@ class Actor(multiprocessing.Process):
 
         self.running = True
         while self.running:
-            self.main_loop(self.inbox.read())
+            if self.wait_for_message:
+                msg = self.inbox.read_wait()
+            else:
+                msg = self.inbox.read()
+            self.main_loop(msg)
 
         self.terminate()
 
