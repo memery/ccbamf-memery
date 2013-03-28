@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 from common import spawn_actor, Actor
 import interpretor
 import irc
