@@ -18,8 +18,17 @@ class IRCMainActor(Actor):
         }
 
     def main_loop(self, message):
+        if message:
+            target, source, payload = message
+            if target[0] in self.children:
+                self.children[target[0]].write_to((target[1:], source, payload))
+            else:
+                newsource = [self.name] + source
+                self.tell_parent((target, newsource, payload))
+
         for network, child in list(self.children.items()):
-            if message == (child.pid, "kill me"):
+            if message and target[0] == self.name and source[0] == network \
+                        and payload == 'kill me':
                 del self.children[network]
 
             # respawn your children if they died!
@@ -37,5 +46,5 @@ class IRCMainActor(Actor):
         # so that the parent process doesn't try to restart
         # everything again, perpetuating some morbid circle.
         if not self.children:
-            self.tell_parent("DIE")
+            self.tell_parent((['master'], [self.name], 'quit'))
             self.stop()

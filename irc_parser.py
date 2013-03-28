@@ -61,3 +61,5 @@ def get_nick(user):
         return re.sub(r'^~?(\S+?)!.*$', '\\1', user)
 
 
+def make_privmsg(channel, content):
+    return 'PRIVMSG {} :{}'.format(channel, content)

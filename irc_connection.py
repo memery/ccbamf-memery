@@ -97,8 +97,10 @@ class IRCConnectionActor(common.Actor):
         channels = set(self.host['channels'])
 
         if message:
-            # dostuff
-            pass
+            target, source, payload = message
+            # if header == 'response':
+            channel, content = payload
+            self.irc.send(irc_parser.make_privmsg(channel, content))
 
         try:
             lines = self.irc.read()
@@ -132,7 +134,7 @@ class IRCConnectionActor(common.Actor):
                 # this stops the current irc thread
                 # and prevents it from being respawned
                 if ircmessage and self.state['nick'] + ': stop' in ircmessage:
-                    self.tell_parent((self.pid, "kill me"))
+                    self.tell_parent((['irc'], [self.name], 'kill me'))
                     self.stop()
                     return
 
@@ -146,6 +148,12 @@ class IRCConnectionActor(common.Actor):
                 if ircmessage and self.state['nick'] + ': restart' in ircmessage:
                     self.stop()
                     return
+
+                payload = (channel, nick, ircmessage)
+                target = ['interpretor']
+                source = [self.name]
+
+                self.tell_parent((target, source, payload))
 
 
         # try to join and part whatever channels applicable
