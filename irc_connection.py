@@ -124,25 +124,25 @@ class IRCConnectionActor(common.Actor):
 
 
             if command == 'PRIVMSG':
-                message = arguments[1]
+                channel, ircmessage = arguments
 
                 ### some test codes:
 
                 # this stops the current irc thread
                 # and prevents it from being respawned
-                if message and self.state['nick'] + ': stop' in message:
+                if ircmessage and self.state['nick'] + ': stop' in ircmessage:
                     self.tell_parent((self.pid, "kill me"))
                     self.stop()
                     return
 
                 # this raises an exception,
                 # and the thread will be respawned!
-                if message and self.state['nick'] + ': except' in message:
+                if ircmessage and self.state['nick'] + ': except' in ircmessage:
                     raise Exception
 
                 # this just exits the loop when it is done,
                 # the thread will be respawned
-                if message and self.state['nick'] + ': restart' in message:
+                if ircmessage and self.state['nick'] + ': restart' in ircmessage:
                     self.stop()
                     return
 

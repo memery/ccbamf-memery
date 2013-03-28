@@ -9,7 +9,7 @@ class MasterActor(Actor):
         self.daemon = False
 
     def initialize(self):
-        self.nodes = {
+        self.children = {
             'logger': spawn_actor(logger.LoggerActor, self.inbox),
             'irc': spawn_actor(irc.IRCMainActor, self.inbox)
         }
@@ -20,7 +20,7 @@ class MasterActor(Actor):
             return
 
         elif message:
-            self.nodes['logger'].write_to(message)
+            self.children['logger'].write_to(message)
 
 if __name__ == "__main__":
     main_actor = spawn_actor(MasterActor, None)

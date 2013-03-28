@@ -4,7 +4,7 @@ import os
 import queue
 
 
-# # Wrapper for queue, providing a non-blocking read.
+# Wrapper for queue, providing a non-blocking read.
 class Inbox:
     def __init__(self):
         self.queue = multiprocessing.Queue()
@@ -38,6 +38,8 @@ class Actor(multiprocessing.Process):
 
         self.terminate()
 
+    # ======== Overloadable functions ==========
+
     def initialize(self):
         pass
 
@@ -46,6 +48,8 @@ class Actor(multiprocessing.Process):
 
     def terminate(self):
         pass
+
+    # =========================================
 
     def stop(self):
         self.running = False
