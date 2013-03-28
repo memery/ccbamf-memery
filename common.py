@@ -18,10 +18,11 @@ class Inbox:
 
 
 class Actor(multiprocessing.Process):
-    def __init__(self, parent_inbox, *args):
+    def __init__(self, parent_inbox, name, *args):
         super().__init__()
         self.inbox = Inbox()
         self.parent_inbox = parent_inbox
+        self.name = name
 
         self.daemon = True # Temporary
         self.wait_for_message = True
@@ -66,8 +67,8 @@ class Actor(multiprocessing.Process):
         self.parent_inbox.write(message)
 
 
-def spawn_actor(actor_constructor, parent_inbox, *args):
-    actor = actor_constructor(parent_inbox, *args)
+def spawn_actor(actor_constructor, parent_inbox, name, *args):
+    actor = actor_constructor(parent_inbox, name, *args)
     actor.start()
     return actor
 

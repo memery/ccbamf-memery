@@ -12,7 +12,7 @@ class IRCMainActor(Actor):
         self.networks = read_json(read_file_or_die('config/irc/networks.json'))
 
         self.children = {
-            network: spawn_actor(IRCConnectionActor, self.inbox,
+            network: spawn_actor(IRCConnectionActor, self.inbox, network,
                                  self.networks[network], self.irc_settings)
             for network in self.networks
         }
@@ -26,7 +26,7 @@ class IRCMainActor(Actor):
             # (but not if they asked to be stopped...)
             elif not child.is_alive():
                 self.children[network] = \
-                    spawn_actor(IRCConnectionActor, self.inbox,
+                    spawn_actor(IRCConnectionActor, self.inbox, network,
                                 self.networks[network], self.irc_settings)
 
 

@@ -10,8 +10,8 @@ class MasterActor(Actor):
 
     def initialize(self):
         self.children = {
-            'logger': spawn_actor(logger.LoggerActor, self.inbox),
-            'irc': spawn_actor(irc.IRCMainActor, self.inbox)
+            'irc': spawn_actor(irc.IRCMainActor, self.inbox, 'irc'),
+            'logger': spawn_actor(logger.LoggerActor, self.inbox, 'logger')
         }
 
     def main_loop(self, message):
@@ -23,4 +23,4 @@ class MasterActor(Actor):
             self.children['logger'].write_to(message)
 
 if __name__ == "__main__":
-    main_actor = spawn_actor(MasterActor, None)
+    main_actor = spawn_actor(MasterActor, None, 'master')
