@@ -2,8 +2,8 @@ from common import Actor, spawn_actor, read_json, read_file_or_die
 from irc_connection import IRCConnectionActor
 
 class IRCMainActor(Actor):
-    def __init__(self, *args):
-        super().__init__(*args)
+
+    def constructor(self):
         self.daemon = False
 
     def initialize(self):

@@ -18,12 +18,16 @@ class Inbox:
 
 
 class Actor(multiprocessing.Process):
-    def __init__(self, parent_inbox):
-        # TEMPORARY
+    def __init__(self, parent_inbox, *args):
         super().__init__()
         self.inbox = Inbox()
         self.parent_inbox = parent_inbox
-        self.daemon = True
+
+        self.daemon = True # Temporary
+        self.constructor(*args)
+
+    def constructor(self, *args):
+        pass
 
     def run(self):
         self.initialize()

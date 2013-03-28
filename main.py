@@ -4,9 +4,8 @@ import logger
 import irc
 
 class MasterActor(Actor):
-    def __init__(self, *args):
-        # TEMPORARY
-        super().__init__(*args)
+
+    def constructor(self):
         self.daemon = False
 
     def initialize(self):

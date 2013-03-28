@@ -57,8 +57,8 @@ class Socket:
 
 
 class IRCConnectionActor(common.Actor):
-    def __init__(self, parent_inbox, host, irc_settings):
-        super().__init__(parent_inbox)
+
+    def constructor(self, host, irc_settings):
         self.host = host
         self.irc_settings = irc_settings
 
