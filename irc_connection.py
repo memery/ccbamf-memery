@@ -116,8 +116,8 @@ class IRCConnectionActor(common.Actor):
                 user, command, arguments = irc_parser.split(line)
                 nick = irc_parser.get_nick(user)
             except AttributeError as e:
-                self.send(('logger:errors', self.name, 'log',
-                    'Failed decoding IRC message: {}'.format(e)))
+                self.send('logger:errors', 'log',
+                    'Failed decoding IRC message: {}'.format(e))
                 continue
 
             if command == 'PING':
@@ -131,8 +131,9 @@ class IRCConnectionActor(common.Actor):
 
 
             # after the housekeeping, just pass it on to irc
-            self.send(('irc', self.name, 'irc line',
-                (line, any(argument.startswith(self.state['nick']) for argument in arguments))))
+            self.send('irc', 'irc line',
+                (line, any(argument.startswith(self.state['nick'])
+                           for argument in arguments)))
 
             # this raises an exception,
             # and the thread will be respawned!

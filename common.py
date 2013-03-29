@@ -123,8 +123,11 @@ class Actor(threading.Thread):
     def write_to(self, message):
         self.inbox.write(message)
 
-    def send(self, message):
-        self.master_inbox.write(message)
+    def send(self, *args, sender=None):
+        if not sender:
+            sender = self.name
+        target, subject, payload = args
+        self.master_inbox.write((target, sender, subject, payload))
 
 
 def read_json(text):

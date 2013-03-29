@@ -50,17 +50,17 @@ class IRCMainActor(Actor):
                     # and prevents it from being respawned
                     if nudge:
                         if ircmessage.split()[1] == 'stop':
-                            self.send((source, self.name, 'die', None))
+                            self.send(source, 'die', None)
                             del self.children[source]
 
                         if ircmessage.split()[1] == 'restart':
-                            self.send((source, self.name, 'die', None))
+                            self.send(source, 'die', None)
 
                     new_payload = (channel, nick, ircmessage)
-                    self.send(('interpretor', self.name, 'interpret', new_payload))
-                    self.send(('logger:chat', source, 'log', new_payload))
+                    self.send('interpretor', 'interpret', new_payload)
+                    self.send('logger:chat', 'log', new_payload, sender=source)
                 else:
-                    self.send(('logger:raw', source, 'log', line))
+                    self.send('logger:raw', 'log', line, sender=source)
 
 
             if subject == 'response':
@@ -69,8 +69,8 @@ class IRCMainActor(Actor):
                 # Or don't, and use it as a playground for a
                 # resilient irc.py...
                 pass
-                # (recipient, channel, content) = payload
-                # self.send((recipient, self.name, 'response', irc_parser.make_privmsg(channel, content)))
+                # recipient, channel, content = payload
+                # self.send(recipient, 'response', irc_parser.make_privmsg(channel, content))
 
 
         # if there are no more children that are supposed to run,
@@ -79,5 +79,5 @@ class IRCMainActor(Actor):
         # so that the parent process doesn't try to restart
         # everything again, perpetuating some morbid circle.
         if not self.children:
-            self.send(('master', self.name, 'quit', None))
+            self.send('master', 'quit', None)
             self.stop()

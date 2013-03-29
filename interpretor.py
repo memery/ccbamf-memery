@@ -31,7 +31,7 @@ class InterpretorActor(Actor):
                 pass
             else:
                 target, destination, response = data
-                self.send((target, self.name, 'response', (destination, response)))
+                self.send(target, 'response', (destination, response))
             if not process.is_alive():
                 self.active_processes.remove(item)
 
