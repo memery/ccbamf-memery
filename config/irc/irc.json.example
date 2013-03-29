@@ -1,3 +1,4 @@
 {
-  "nick": "nickname"
+  "nick": "nickname",
+  "reconnect_delay": 30
 }
