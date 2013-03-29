@@ -96,10 +96,10 @@ class IRCConnectionActor(common.Actor):
         if message:
             target, source, subject, payload = message
             if subject == 'response':
-                # TODO: Open the flood gates here once
-                # irc.py sends responses properly...
-                pass
-                # self.irc.send(payload)
+                # TODO: try except, only i don't know what
+                # exceptions it may throw.
+                line = irc_parser.make_privmsg(*payload)
+                self.irc.send(line)
             if subject == 'die':
                 self.stop()
 

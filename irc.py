@@ -57,20 +57,11 @@ class IRCMainActor(Actor):
                             self.send(source, 'die', None)
 
                     new_payload = (channel, nick, ircmessage)
-                    self.send('interpretor', 'interpret', new_payload)
+                    self.send('interpretor', 'interpret', new_payload, sender=source)
                     self.send('logger:chat', 'log', new_payload, sender=source)
                 else:
                     self.send('logger:raw', 'log', line, sender=source)
 
-
-            if subject == 'response':
-                # TODO: Implement this properly in interpretor
-                # before opening the flood gates here.
-                # Or don't, and use it as a playground for a
-                # resilient irc.py...
-                pass
-                # recipient, channel, content = payload
-                # self.send(recipient, 'response', irc_parser.make_privmsg(channel, content))
 
 
         # if there are no more children that are supposed to run,
