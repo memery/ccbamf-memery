@@ -85,10 +85,6 @@ class IRCConnectionActor(common.Actor):
         self.irc.send('NICK {}'.format(self.irc_settings['nick']))
         self.irc.send('USER {0} 0 * :IRC bot {0}'.format(self.irc_settings['nick']))
 
-        # and start listening on it
-        # this is the easiest place to set-ify the channels
-        # listen(inbox, parent, self.irc, self.irc_settings, set(self.host['channels']))
-
         self.state = {
             'nick': self.irc_settings['nick'],
             'channels': set([]),
@@ -100,8 +96,13 @@ class IRCConnectionActor(common.Actor):
         if message:
             target, source, subject, payload = message
             if subject == 'response':
-                channel, content = payload
-                self.irc.send(irc_parser.make_privmsg(channel, content))
+                # TODO: Open the flood gates here once
+                # irc.py sends responses properly...
+                pass
+                # self.irc.send(payload)
+            if subject == 'die':
+                self.stop()
+
 
         try:
             lines = self.irc.read()
@@ -111,8 +112,13 @@ class IRCConnectionActor(common.Actor):
 
         for line in lines:
             # extract the informations from the message
-            user, command, arguments = irc_parser.split(line)
-            nick = irc_parser.get_nick(user)
+            try:
+                user, command, arguments = irc_parser.split(line)
+                nick = irc_parser.get_nick(user)
+            except AttributeError as e:
+                self.send(('logger:errors', self.name, 'log',
+                    'Failed decoding IRC message: {}'.format(e)))
+                continue
 
             if command == 'PING':
                 self.irc.send('PONG :' + arguments[0])
@@ -124,35 +130,15 @@ class IRCConnectionActor(common.Actor):
                 self.state['channels'].discard(arguments[0])
 
 
-            if command == 'PRIVMSG':
-                channel, ircmessage = arguments
+            # after the housekeeping, just pass it on to irc
+            self.send(('irc', self.name, 'irc line',
+                (line, any(argument.startswith(self.state['nick']) for argument in arguments))))
 
-                ### some test codes:
-
-                # this stops the current irc thread
-                # and prevents it from being respawned
-                if ircmessage and self.state['nick'] + ': stop' in ircmessage:
-                    self.send(('irc', self.name, 'kill me', None))
-                    self.stop()
-                    return
-
-                # this raises an exception,
-                # and the thread will be respawned!
-                if ircmessage and self.state['nick'] + ': except' in ircmessage:
-                    raise Exception
-
-                # this just exits the loop when it is done,
-                # the thread will be respawned
-                if ircmessage and self.state['nick'] + ': restart' in ircmessage:
-                    self.stop()
-                    return
-
-                payload = (channel, nick, ircmessage)
-
-                self.send(('interpretor', self.name, 'interpret', payload))
-                self.send(('logger:chat', self.name, 'log', payload))
-            else:
-                self.send(('logger:raw', self.name, 'log', line))
+            # this raises an exception,
+            # and the thread will be respawned!
+            # TODO: remove this obviously...
+            if 'except' in arguments:
+                raise Exception
 
 
         # try to join and part whatever channels applicable

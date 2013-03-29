@@ -2,6 +2,7 @@ from itertools import repeat
 
 from common import Actor, read_json, read_file_or_die
 from irc_connection import IRCConnectionActor
+import irc_parser
 
 class IRCMainActor(Actor):
 
@@ -24,13 +25,56 @@ class IRCMainActor(Actor):
         if message:
             target, source, subject, payload = message
 
-        for name, child in list(self.children.items()):
-            if message and source == name and subject == 'kill me':
-                del self.children[name]
+            if subject == 'irc line':
+                line, nudge = payload
+                user, command, arguments = irc_parser.split(line)
+                nick = irc_parser.get_nick(user)
 
+                if command == 'PRIVMSG' and source in self.children:
+                    channel, ircmessage = arguments
+
+                    ### some test codes:
+                    # TODO: make these functions only available
+                    # to admins... (and move them out of IRC
+                    # god damn it! they might as well be protocol
+                    # agnostic as long as there's a way for
+                    # IRC to tell interpretor that the admin
+                    # is authenticated.)
+
+                    # TODO: These were previously
+                    #     if ircmessage and self.state ...
+                    # why the ircmessage check?
+
+                    # this stops the current irc thread
+                    # and prevents it from being respawned
+                    if nudge:
+                        if ircmessage.split()[1] == 'stop':
+                            self.send((source, self.name, 'die', None))
+                            del self.children[source]
+
+                        if ircmessage.split()[1] == 'restart':
+                            self.send((source, self.name, 'die', None))
+
+                    new_payload = (channel, nick, ircmessage)
+                    self.send(('interpretor', self.name, 'interpret', new_payload))
+                    self.send(('logger:chat', source, 'log', new_payload))
+                else:
+                    self.send(('logger:raw', source, 'log', line))
+
+
+            if subject == 'response':
+                # TODO: Implement this properly in interpretor
+                # before opening the flood gates here.
+                # Or don't, and use it as a playground for a
+                # resilient irc.py...
+                pass
+                # (recipient, channel, content) = payload
+                # self.send((recipient, self.name, 'response', irc_parser.make_privmsg(channel, content)))
+
+
+        for name, child in list(self.children.items()):
             # respawn your children if they died!
-            # (but not if they asked to be stopped...)
-            elif not child.is_alive():
+            if not child.is_alive():
                 # Ditch the 'irc:' prefix to get the network name
                 network = name.split(':', 1)[1]
                 self.children[name] = self.make_a_baby(
