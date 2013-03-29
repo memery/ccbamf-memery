@@ -10,16 +10,14 @@ class MasterActor(Actor):
         self.daemon = False
 
     def initialize(self):
-        baby_names = (
+        # make_babies() needs a master_inbox
+        self.master_inbox = self.inbox
+
+        self.children = self.make_babies((
             ('interpretor', InterpretorActor),
             ('irc', IRCMainActor),
             ('logger', LoggerActor)
-        )
-
-        self.children = {
-            name: spawn_actor(class_, self.inbox, name)
-            for name, class_ in baby_names
-        }
+        ))
 
         self.address_book = {}
 

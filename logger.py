@@ -2,15 +2,11 @@ import common
 
 class LoggerActor(common.Actor):
     def initialize(self):
-        baby_names = (
+        self.children = self.make_babies((
             ('logger:errors', ErrorLogger),
             ('logger:chat', ChatLogger),
             ('logger:raw', RawLogger)
-        )
-        self.children = {
-            name: common.spawn_actor(class_, self.master_inbox, name)
-            for name, class_ in baby_names
-        }
+        ))
 
 class ErrorLogger(common.Actor):
     def main_loop(self, message):

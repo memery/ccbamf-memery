@@ -11,14 +11,12 @@ class IRCMainActor(Actor):
         self.irc_settings = read_json(read_file_or_die('config/irc/irc.json'))
         self.networks = read_json(read_file_or_die('config/irc/networks.json'))
 
-        self.make_baby = lambda name: \
-            spawn_actor(IRCConnectionActor, self.master_inbox, name,
-                        self.networks[name], self.irc_settings)
-
-        self.children = {
-            network: self.make_baby(network)
-            for network in self.networks
-        }
+        self.children = self.make_babies(zip(
+            self.networks,
+            [IRCConnectionActor] * len(self.networks),
+            self.networks.values(),
+            [self.irc_settings] * len(self.networks)
+        ))
 
     def main_loop(self, message):
         if message:
@@ -31,7 +29,13 @@ class IRCMainActor(Actor):
             # respawn your children if they died!
             # (but not if they asked to be stopped...)
             elif not child.is_alive():
-                self.children[network] = self.make_baby(network)
+                self.children[network] = spawn_actor(
+                    IRCConnectionActor,
+                    self.master_inbox,
+                    network,
+                    self.networks[network],
+                    self.irc_settings
+                )
 
 
         # if there are no more children that are supposed to run,

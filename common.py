@@ -59,6 +59,16 @@ class Actor(threading.Thread):
 
     # =========================================
 
+    def make_babies(self, names_and_classes):
+        """
+        Take a list of tuples with (name, class, *args)
+        and create actors from them.
+        """
+        return {
+            name: spawn_actor(class_, self.master_inbox, name, *args)
+            for name, class_, *args in names_and_classes
+        }
+
     def stop(self):
         self.running = False
 
