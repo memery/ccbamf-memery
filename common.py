@@ -1,5 +1,5 @@
 import json
-import multiprocessing
+import threading
 import os
 import queue
 
@@ -7,7 +7,7 @@ import queue
 # Wrapper for queue, providing a non-blocking read.
 class Inbox:
     def __init__(self):
-        self.queue = multiprocessing.Queue()
+        self.queue = queue.Queue()
     def write(self, message):
         self.queue.put(message)
     def read_wait(self):
@@ -17,7 +17,7 @@ class Inbox:
         except queue.Empty: return None
 
 
-class Actor(multiprocessing.Process):
+class Actor(threading.Thread):
     def __init__(self, parent_inbox, name, *args):
         super().__init__()
         self.inbox = Inbox()
