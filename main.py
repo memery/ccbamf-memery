@@ -13,7 +13,7 @@ class MasterActor(Actor):
         # make_babies() needs a master_inbox
         self.master_inbox = self.inbox
 
-        self.children = self.make_babies(
+        self.make_babies(
             ('interpretor', InterpretorActor),
             ('irc', IRCMainActor),
             ('logger', LoggerActor),

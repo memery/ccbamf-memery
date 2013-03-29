@@ -2,7 +2,9 @@ import common
 
 class LoggerActor(common.Actor):
     def initialize(self):
-        self.children = self.make_babies(
+        self.wait_for_message = False
+        self.keep_the_kids_alive = True
+        self.make_babies(
             ('errors', ErrorLogger),
             ('chat', ChatLogger),
             ('raw', RawLogger)

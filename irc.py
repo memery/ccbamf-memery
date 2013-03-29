@@ -11,10 +11,11 @@ class IRCMainActor(Actor):
 
     def initialize(self):
         self.wait_for_message = False
+        self.keep_the_kids_alive = True
         self.irc_settings = read_json(read_file_or_die('config/irc/irc.json'))
         self.networks = read_json(read_file_or_die('config/irc/networks.json'))
 
-        self.children = self.make_babies(*zip(
+        self.make_babies(*zip(
             self.networks,
             repeat(IRCConnectionActor),
             self.networks.values(),
@@ -70,19 +71,6 @@ class IRCMainActor(Actor):
                 pass
                 # (recipient, channel, content) = payload
                 # self.send((recipient, self.name, 'response', irc_parser.make_privmsg(channel, content)))
-
-
-        for name, child in list(self.children.items()):
-            # respawn your children if they died!
-            if not child.is_alive():
-                # Ditch the 'irc:' prefix to get the network name
-                network = name.split(':', 1)[1]
-                self.children[name] = self.make_a_baby(
-                    network,
-                    IRCConnectionActor,
-                    self.networks[network],
-                    self.irc_settings
-                )
 
 
         # if there are no more children that are supposed to run,
