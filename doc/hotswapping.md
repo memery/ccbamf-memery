@@ -1,40 +1,45 @@
-Hotswapping av processer
-========================
+Hotswapping of threads
+======================
 
-IRC-uppkopplings-processerna kan skicka meddelande om `Reload('irc_connection')`
-till IRC-processen, i vilken en flagga tänds som indikerar att vid nästa reconnect
-ska också reload göras. (Kan reload göras direkt utan att påverka nuvarande
-funktioner? Borde kanske gå.) Det är dumt att reconnecta automagiskt vid reload,
-för om båten fyller en vital funktion i någon kanal (detta blir lurigt över flera
-kanaler på samma nätverk...) så kanske man borde avgöra separat när den ska
-återansluta och ladda om.
+The IRC connection threads can send messages about `'reload irc_connection'` to
+the IRC thread, in which a flag may be raised which indicates that during the
+next reconnect, a reload also should be performed. (May reload be done
+direction without affecting the running functions? Maybe works.) It's
+unnecessary to reconnect automagically during a reload, because if the bot
+fills a vital role in some other channel (this gets awkward on multiple
+channels on the same network...) it's a good idea to decide whether to update
+and whether to reconnect separately.
 
-Om meddelandet istället är att `Reload('irc')` så måste irc spara sin barn, skicka
-dem i ett meddelande till master, som startar om irc och ger den barnen tillbaks,
-antingen direkt som argument eller via någon slags meddelande. Ahduno. IRC-
-processen bör även få fortsätta använda samma inbox som tidigare, eller?
+If the message instead asks for `'reload irc'`, the IRC thread must save it's
+children, send them in a message to master, which restarts the IRC thread and
+gives it its children back. This may be done either in an argument or via a
+message of some sort. The IRC process should preferably get to use the same
+inbox as before, right?
 
-Om meddelandet är `Reload('master')` så hf.
+If the message is `'reload master'`, have fun.
 
-Om meddelandet är `Reload('logger')` så ska IRC skicka meddelande till logger om
-att logger ska spara det den håller på med och sen be om att få startas om, efter
-vilket den kan startas om *med samma inbox som den hade sen tidigare*! Detta för
-att saker inte ska försvinna ut i cyberrymden medan den startar om, utan när den
-är klar återupptar den bara där den slutade.
+If the message is `'reload logger'`, the IRC thread should send a message to
+logger about logger having to save whatever it's doing and then ask to be
+restarted, after which it should be restarted *with the same inbox as before*!
+This is because things shouldn't disappear into cyberspace while it restarts.
+When it gets back online, it just continues from where it left off.
 
-Om meddelandet är `Reload('memery')` så ska IRC skicka meddelande till memery om
-att memery ska be om att få bli omstartad och sedan bara dö ut när nuvarande
-beräkningar är klara. Nya memery kan gott använda samma inbox som gamla, bara
-inte gamla får någon chans att läsa in saker från den på nytt innan den dör ut.
+If the message is `'reload memery'`, the IRC thread should send a message to
+memery about memery asking to be restarted, and then memery just gets to die
+when the current computations are done. The new memery can just as well use the
+same inbox as before, as long as the old one doesn't get to read stuff from it
+before it dies.
 
-Viktiga punkter:
+Important points:
 
- *  Ingen process får döda sina barn! Processen kan be sina barn om att stänga av
-    eller starta om, men barnen själva får fatta slutgiltiga beslutet för de har
-    bättre koll på läget.
+ *  No thread may kill its children! A thread may only ask its children to stop
+ or restart, but the children themselves get the final say because they know
+ more about the situation they're in.
 
- *  Vissa processer måste när de startas om ta över sin gamla inbox för att inte
-    viktig information ska gå förlorad.
+ *  Some threads must, when they are restarted, continue to use their old
+ inbox. This is to avoid losing information. Is this really important though?
 
- *  För att kunna ladda om IRC utan att tappa uppkopplingarna krävs det att IRC
-    sparar sina barn så att nästa IRC kan ta över dem, utan att behöva starta nya.
+ *  To be able to reload IRC without losing connections it's required that IRC
+ saves its children so the next IRC may inherit them without having to start
+ new one.
+

@@ -34,7 +34,6 @@ class MasterActor(Actor):
                 self.address_book[source] = payload
         elif target in self.address_book:
             self.address_book[target].write(message)
-            # print(self.address_book)
 
     def broadcast(self, subject, payload):
         for inbox in self.address_book.values():
