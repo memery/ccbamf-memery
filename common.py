@@ -13,7 +13,7 @@ class Inbox:
     def read_wait(self):
         return self.queue.get()
     def read(self):
-        try: return self.queue.get(True, 1)
+        try: return self.queue.get(True, 0.1)
         except queue.Empty: return None
 
 
