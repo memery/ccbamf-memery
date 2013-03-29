@@ -33,10 +33,9 @@ class IRCMainActor(Actor):
             elif not child.is_alive():
                 # Ditch the 'irc:' prefix to get the network name
                 network = name.split(':', 1)[1]
-                self.children[name] = spawn_actor(
-                    IRCConnectionActor,
-                    self.master_inbox,
+                self.children[name] = self.make_a_baby(
                     network,
+                    IRCConnectionActor,
                     self.networks[network],
                     self.irc_settings
                 )

@@ -72,6 +72,12 @@ class Actor(threading.Thread):
             for name, class_, *args in names_and_classes
         }
 
+    def make_a_baby(self, *args, use_family_name=True):
+        """
+        Use make_babies to create a child actor, and return it.
+        """
+        return list(self.make_babies(args, use_family_name=use_family_name).values())[0]
+
     def stop(self):
         self.running = False
 
@@ -83,6 +89,13 @@ class Actor(threading.Thread):
 
 
 def spawn_actor(actor_constructor, master_inbox, name, *args):
+    """
+    Spawn an actor using the provided constructor and name.
+    args are the optional arguments to be passed to the constructor.
+
+    Most of the times, make_babies() and make_a_baby() should
+    be used in favor of spawn_actor().
+    """
     actor = actor_constructor(master_inbox, name, *args)
     actor.start()
     return actor
