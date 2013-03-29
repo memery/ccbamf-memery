@@ -19,6 +19,7 @@ class Inbox:
 
 class Actor(threading.Thread):
     def __init__(self, master_inbox, name, *args):
+        """ __init__ should never be overloaded at all! """
         super().__init__()
         self.inbox = Inbox()
         self.master_inbox = master_inbox
@@ -29,6 +30,7 @@ class Actor(threading.Thread):
         self.daemon = True # Temporary
         self.wait_for_message = True
         self.constructor(*args)
+        self.start()
 
     def constructor(self, *args):
         pass
@@ -68,7 +70,7 @@ class Actor(threading.Thread):
         """
         prefix = self.name + ':' if use_family_name else ''
         return {
-            prefix+name: spawn_actor(class_, self.master_inbox, prefix+name, *args)
+            prefix+name: class_(self.master_inbox, prefix+name, *args)
             for name, class_, *args in names_and_classes
         }
 
@@ -86,19 +88,6 @@ class Actor(threading.Thread):
 
     def send(self, message):
         self.master_inbox.write(message)
-
-
-def spawn_actor(actor_constructor, master_inbox, name, *args):
-    """
-    Spawn an actor using the provided constructor and name.
-    args are the optional arguments to be passed to the constructor.
-
-    Most of the times, make_babies() and make_a_baby() should
-    be used in favor of spawn_actor().
-    """
-    actor = actor_constructor(master_inbox, name, *args)
-    actor.start()
-    return actor
 
 
 def read_json(text):
