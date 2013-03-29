@@ -22,4 +22,4 @@ class ChatLogger(common.Actor):
 class RawLogger(common.Actor):
     def main_loop(self, message):
         _, source, _, payload = message
-        print('RAW {}> {}'.format('/'.join(source), payload))
+        print('RAW {}> {}'.format(source, payload))
