@@ -29,6 +29,9 @@ class Actor(threading.Thread):
 
         self.daemon = True # Temporary
         self.wait_for_message = True
+        self.keep_the_kids_alive = False
+        self.child_data = {}
+        self.children = {}
         self.constructor(*args)
         self.start()
 
@@ -44,6 +47,8 @@ class Actor(threading.Thread):
                 msg = self.inbox.read_wait()
             else:
                 msg = self.inbox.read()
+            if self.keep_the_kids_alive:
+                self.check_on_the_kids(msg)
             self.main_loop(msg)
 
         self.terminate()
@@ -61,6 +66,8 @@ class Actor(threading.Thread):
 
     # =========================================
 
+    # ======== Take care of the kids ==========
+
     def make_babies(self, *names_and_classes, use_family_name=True):
         """
         Take a pile of tuple arguments with the structure
@@ -68,17 +75,47 @@ class Actor(threading.Thread):
 
         Add the parents name as a prefix if not told not to.
         """
-        prefix = self.name + ':' if use_family_name else ''
-        return {
-            prefix+name: class_(self.master_inbox, prefix+name, *args)
+        # Give new names to the kids, using the parent's name as prefix
+        if use_family_name:
+            names_and_classes = [
+                [self.name + ':' + name] + rest
+                for name, *rest in names_and_classes
+            ]
+
+        # Save the raw data to be able to revive the babies if they die
+        self.child_data = {
+            name: [name] + args
+            for name, *args in names_and_classes
+        }
+
+        # Make the babies!
+        self.children = {
+            name: class_(self.master_inbox, name, *args)
             for name, class_, *args in names_and_classes
         }
 
-    def make_a_baby(self, *args, use_family_name=True):
+    def check_on_the_kids(self, message):
         """
-        Use make_babies to create a child actor, and return it.
+        Make sure the children are alive if they want to be,
+        and kill them if the want to die.
+
+        Not even slightly morbid.
         """
-        return list(self.make_babies(args, use_family_name=use_family_name).values())[0]
+        if message:
+            _, source, subject, _ = message
+
+        for name, child in list(self.children.items()):
+            # Suicides are a-ok! If someone wants to die, let them.
+            if message and source == name and subject == 'kill me':
+                del self.children[name]
+
+            # Resurrect dead kids
+            elif not child.is_alive():
+                name, class_, *args = self.child_data[name]
+                self.children[name] = class_(self.master_inbox, name, *args)
+
+    # =========================================
+
 
     def stop(self):
         self.running = False

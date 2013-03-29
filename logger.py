@@ -2,7 +2,7 @@ import common
 
 class LoggerActor(common.Actor):
     def initialize(self):
-        self.children = self.make_babies(
+        self.make_babies(
             ('errors', ErrorLogger),
             ('chat', ChatLogger),
             ('raw', RawLogger)
