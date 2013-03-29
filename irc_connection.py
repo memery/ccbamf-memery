@@ -109,9 +109,6 @@ class IRCConnectionActor(common.Actor):
 
 
         for line in lines:
-            # temporary logging solution
-            print(line)
-
             # extract the informations from the message
             user, command, arguments = irc_parser.split(line)
             nick = irc_parser.get_nick(user)
@@ -154,6 +151,9 @@ class IRCConnectionActor(common.Actor):
                 source = [self.name]
 
                 self.tell_parent((target, source, payload))
+                self.tell_parent((['logger', 'chat'], [self.name], payload))
+            else:
+                self.tell_parent((['logger', 'raw'], [self.name], line))
 
 
         # try to join and part whatever channels applicable
