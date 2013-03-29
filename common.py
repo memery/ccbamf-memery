@@ -118,6 +118,7 @@ class Actor(threading.Thread):
 
 
     def stop(self):
+        self.send('master', 'death', None)
         self.running = False
 
     def write_to(self, message):
