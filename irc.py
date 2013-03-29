@@ -1,6 +1,6 @@
 from itertools import repeat
 
-from common import Actor, spawn_actor, read_json, read_file_or_die
+from common import Actor, read_json, read_file_or_die
 from irc_connection import IRCConnectionActor
 
 class IRCMainActor(Actor):

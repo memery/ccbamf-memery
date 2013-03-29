@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from common import spawn_actor, Actor
+from common import Actor
 from interpretor import InterpretorActor
 from irc import IRCMainActor
 from logger import LoggerActor
