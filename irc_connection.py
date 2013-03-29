@@ -1,6 +1,7 @@
 
 import socket
 import ssl
+from time import sleep
 import common
 import irc_parser
 
