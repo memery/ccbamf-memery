@@ -20,6 +20,7 @@ class MasterActor(Actor):
         target, source, payload = message
         if target[0] == self.name and payload == 'quit':
             self.stop()
+            self.children['interpretor'].write_to((None, self.name, 'quit'))
             return
         elif target[0] in self.children:
             self.children[target[0]].write_to((target[1:], source, payload))
