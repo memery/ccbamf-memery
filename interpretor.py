@@ -1,4 +1,4 @@
-import multiprocessing
+import threading
 import queue
 
 from common import Actor
@@ -18,7 +18,7 @@ class InterpretorActor(Actor):
                 self.stop()
                 return
             destination, author, content = payload
-            q = multiprocessing.Queue()
+            q = queue.Queue()
             worker = ParserWorker(source, destination, author, content, q)
             self.active_processes.append((q, worker))
 
@@ -35,7 +35,7 @@ class InterpretorActor(Actor):
                 self.active_processes.remove(item)
 
 
-class ParserWorker(multiprocessing.Process):
+class ParserWorker(threading.Thread):
     def __init__(self, source, destination, author, content, response_queue):
         super().__init__()
         self.source = source
