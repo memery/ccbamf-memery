@@ -96,9 +96,11 @@ class IRCConnectionActor(common.Actor):
         if message:
             target, source, subject, payload = message
             if subject == 'response':
-                # TODO: try except, only i don't know what
-                # exceptions it may throw.
-                line = irc_parser.make_privmsg(*payload)
+                try:
+                    line = irc_parser.make_privmsg(*payload)
+                except Exception as e:
+                    self.send('logger:errors', 'log',
+                        'Failed encoding IRC message: {}'.format(e))
                 self.irc.send(line)
             if subject == 'die':
                 self.stop()
