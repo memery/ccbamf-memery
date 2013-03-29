@@ -24,14 +24,16 @@ class IRCMainActor(Actor):
         if message:
             target, source, subject, payload = message
 
-        for network, child in list(self.children.items()):
-            if message and source == network and subject == 'kill me':
-                del self.children[network]
+        for name, child in list(self.children.items()):
+            if message and source == name and subject == 'kill me':
+                del self.children[name]
 
             # respawn your children if they died!
             # (but not if they asked to be stopped...)
             elif not child.is_alive():
-                self.children[network] = spawn_actor(
+                # Ditch the 'irc:' prefix to get the network name
+                network = name.split(':', 1)[1]
+                self.children[name] = spawn_actor(
                     IRCConnectionActor,
                     self.master_inbox,
                     network,

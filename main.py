@@ -16,7 +16,8 @@ class MasterActor(Actor):
         self.children = self.make_babies(
             ('interpretor', InterpretorActor),
             ('irc', IRCMainActor),
-            ('logger', LoggerActor)
+            ('logger', LoggerActor),
+            use_family_name=False
         )
 
         self.address_book = {}

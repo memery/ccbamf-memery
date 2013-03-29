@@ -59,13 +59,16 @@ class Actor(threading.Thread):
 
     # =========================================
 
-    def make_babies(self, *names_and_classes):
+    def make_babies(self, *names_and_classes, use_family_name=True):
         """
         Take a pile of tuple arguments with the structure
         (name, class[, *args]) and create actors from them.
+
+        Add the parents name as a prefix if not told not to.
         """
+        prefix = self.name + ':' if use_family_name else ''
         return {
-            name: spawn_actor(class_, self.master_inbox, name, *args)
+            prefix+name: spawn_actor(class_, self.master_inbox, prefix+name, *args)
             for name, class_, *args in names_and_classes
         }
 
