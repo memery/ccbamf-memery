@@ -40,4 +40,4 @@ class MasterActor(Actor):
 
 
 if __name__ == "__main__":
-    main_actor = spawn_actor(MasterActor, None, 'master')
+    main_actor = MasterActor(None, 'master')
