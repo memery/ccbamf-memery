@@ -18,10 +18,12 @@ class Inbox:
 
 
 class Actor(threading.Thread):
-    def __init__(self, parent_inbox, name, *args):
+    def __init__(self, master_inbox, name, *args):
         super().__init__()
         self.inbox = Inbox()
-        self.parent_inbox = parent_inbox
+        self.master_inbox = master_inbox
+        if master_inbox:
+            self.master_inbox.write(('master', name, 'birth', self.inbox))
         self.name = name
 
         self.daemon = True # Temporary
@@ -63,12 +65,12 @@ class Actor(threading.Thread):
     def write_to(self, message):
         self.inbox.write(message)
 
-    def tell_parent(self, message):
-        self.parent_inbox.write(message)
+    def send(self, message):
+        self.master_inbox.write(message)
 
 
-def spawn_actor(actor_constructor, parent_inbox, name, *args):
-    actor = actor_constructor(parent_inbox, name, *args)
+def spawn_actor(actor_constructor, master_inbox, name, *args):
+    actor = actor_constructor(master_inbox, name, *args)
     actor.start()
     return actor
 

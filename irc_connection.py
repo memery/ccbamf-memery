@@ -73,7 +73,7 @@ class IRCConnectionActor(common.Actor):
                 0.01
             )
         except (socket.error, socket.herror, socket.gaierror):
-            log_error('Connection to {}:{} failed, waiting for {} seconds...'.format(
+            print('Connection to {}:{} failed, waiting for {} seconds...'.format(
                         self.host['server'],
                         self.host['port'],
                         self.irc_settings['reconnect_delay']))
@@ -97,10 +97,10 @@ class IRCConnectionActor(common.Actor):
         channels = set(self.host['channels'])
 
         if message:
-            target, source, payload = message
-            # if header == 'response':
-            channel, content = payload
-            self.irc.send(irc_parser.make_privmsg(channel, content))
+            target, source, subject, payload = message
+            if subject == 'response':
+                channel, content = payload
+                self.irc.send(irc_parser.make_privmsg(channel, content))
 
         try:
             lines = self.irc.read()
@@ -134,7 +134,7 @@ class IRCConnectionActor(common.Actor):
                 # this stops the current irc thread
                 # and prevents it from being respawned
                 if ircmessage and self.state['nick'] + ': stop' in ircmessage:
-                    self.tell_parent((['irc'], [self.name], 'kill me'))
+                    self.send(('irc', self.name, 'kill me', None))
                     self.stop()
                     return
 
@@ -150,10 +150,8 @@ class IRCConnectionActor(common.Actor):
                     return
 
                 payload = (channel, nick, ircmessage)
-                target = ['interpretor']
-                source = [self.name]
 
-                self.tell_parent((target, source, payload))
+                self.send(('interpretor', self.name, 'interpret', payload))
 
 
         # try to join and part whatever channels applicable

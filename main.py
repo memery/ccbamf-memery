@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from common import spawn_actor, Actor
-import interpretor
-import irc
-import logger
+from interpretor import InterpretorActor
+from irc import IRCMainActor
+from logger import LoggerActor
 
 class MasterActor(Actor):
 
@@ -10,20 +10,36 @@ class MasterActor(Actor):
         self.daemon = False
 
     def initialize(self):
+        baby_names = (
+            ('interpretor', InterpretorActor),
+            ('irc', IRCMainActor),
+            ('logger', LoggerActor)
+        )
+
         self.children = {
-            'interpretor': spawn_actor(interpretor.InterpretorActor, self.inbox, 'interpretor'),
-            'irc': spawn_actor(irc.IRCMainActor, self.inbox, 'irc'),
-            'logger': spawn_actor(logger.LoggerActor, self.inbox, 'logger')
+            name: spawn_actor(class_, self.inbox, name)
+            for name, class_ in baby_names
         }
 
+        self.address_book = {}
+
     def main_loop(self, message):
-        target, source, payload = message
-        if target[0] == self.name and payload == 'quit':
-            self.stop()
-            self.children['interpretor'].write_to((None, self.name, 'quit'))
-            return
-        elif target[0] in self.children:
-            self.children[target[0]].write_to((target[1:], source, payload))
+        target, source, subject, payload = message
+        if target == self.name:
+            if subject == 'quit':
+                self.stop()
+                self.broadcast('quit', None)
+                return
+            elif subject == 'birth':
+                self.address_book[source] = payload
+        elif target in self.address_book:
+            self.address_book[target].write(message)
+            # print(self.address_book)
+
+    def broadcast(self, subject, payload):
+        for inbox in self.address_book.values():
+            inbox.write((None, self.name, subject, payload))
+
 
 if __name__ == "__main__":
     main_actor = spawn_actor(MasterActor, None, 'master')

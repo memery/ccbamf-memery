@@ -13,14 +13,15 @@ class InterpretorActor(Actor):
 
     def main_loop(self, message):
         if message:
-            target, source, payload = message
-            if payload == 'quit' and source == 'master':
+            target, source, subject, payload = message
+            if subject == 'quit' and source == 'master':
                 self.stop()
                 return
-            destination, author, content = payload
-            q = queue.Queue()
-            worker = ParserWorker(source, destination, author, content, q)
-            self.active_processes.append((q, worker))
+            elif subject == 'interpret':
+                destination, author, content = payload
+                q = queue.Queue()
+                worker = ParserWorker(source, destination, author, content, q)
+                self.active_processes.append((q, worker))
 
         for item in list(self.active_processes):
             q, process = item
@@ -30,7 +31,7 @@ class InterpretorActor(Actor):
                 pass
             else:
                 target, destination, response = data
-                self.tell_parent((target, [self.name], (destination, response)))
+                self.send((target, self.name, 'response', (destination, response)))
             if not process.is_alive():
                 self.active_processes.remove(item)
 
