@@ -59,10 +59,10 @@ class Actor(threading.Thread):
 
     # =========================================
 
-    def make_babies(self, names_and_classes):
+    def make_babies(self, *names_and_classes):
         """
-        Take a list of tuples with (name, class, *args)
-        and create actors from them.
+        Take a pile of tuple arguments with the structure
+        (name, class[, *args]) and create actors from them.
         """
         return {
             name: spawn_actor(class_, self.master_inbox, name, *args)
@@ -91,6 +91,9 @@ def read_json(text):
     return json.loads('\n'.join(without_comments))
 
 def read_file_or_die(fname):
-    """ Read a file and return the raw data. Throws exception if it doesn't exist. """
+    """
+    Read a file and return the raw data.
+    Throws exception if it doesn't exist.
+    """
     with open(fname, encoding='utf-8') as f:
         return f.read()

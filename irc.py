@@ -1,3 +1,5 @@
+from itertools import repeat
+
 from common import Actor, spawn_actor, read_json, read_file_or_die
 from irc_connection import IRCConnectionActor
 
@@ -11,11 +13,11 @@ class IRCMainActor(Actor):
         self.irc_settings = read_json(read_file_or_die('config/irc/irc.json'))
         self.networks = read_json(read_file_or_die('config/irc/networks.json'))
 
-        self.children = self.make_babies(zip(
+        self.children = self.make_babies(*zip(
             self.networks,
-            [IRCConnectionActor] * len(self.networks),
+            repeat(IRCConnectionActor),
             self.networks.values(),
-            [self.irc_settings] * len(self.networks)
+            repeat(self.irc_settings)
         ))
 
     def main_loop(self, message):
