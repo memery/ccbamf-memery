@@ -31,7 +31,7 @@ class MasterActor(Actor):
                 return
             elif subject == 'birth':
                 self.address_book[source] = payload
-            elif subject == 'death' and source in address_book:
+            elif subject == 'death' and source in self.address_book:
                 del self.address_book[source]
         elif target in self.address_book:
             self.address_book[target].write(message)
