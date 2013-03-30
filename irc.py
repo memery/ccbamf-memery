@@ -58,7 +58,7 @@ class IRCMainActor(Actor):
 
                         # TODO: Remove this completely, of course
                         if ircmessage.split()[1] == 'ircexcept':
-                            self.send(source, 'die', None)
+                            raise Exception
 
                     new_payload = (channel, nick, ircmessage)
                     self.send('interpretor', 'interpret', new_payload, sender=source)
