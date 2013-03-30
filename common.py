@@ -1,11 +1,12 @@
 import json
 import threading
-import os
 import queue
 
 
-# Wrapper for queue, providing a non-blocking read.
 class Inbox:
+    """
+    Wrapper for queue, providing a non-blocking read.
+    """
     def __init__(self):
         self.queue = queue.Queue()
     def write(self, message):
@@ -19,7 +20,11 @@ class Inbox:
 
 class Actor(threading.Thread):
     def __init__(self, master_inbox, name, *args):
-        """ __init__ should never be overloaded at all! """
+        """
+        This should never be overloaded!
+
+        Use constructor() and/or initialize() instead.
+        """
         super().__init__()
         self.inbox = Inbox()
         self.master_inbox = master_inbox
@@ -32,13 +37,15 @@ class Actor(threading.Thread):
         self.keep_the_kids_alive = False
         self.child_data = {}
         self.children = {}
+        # Call constructor with all the subclass-specific arguments.
         self.constructor(*args)
         self.start()
 
-    def constructor(self, *args):
-        pass
-
     def run(self):
+        """
+        This should never be overloaded, except in very VERY extreme
+        circumstances. Use the overloadable functions below instead.
+        """
         self.initialize()
 
         self.running = True
@@ -53,20 +60,52 @@ class Actor(threading.Thread):
 
         self.terminate()
 
-    # ======== Overloadable functions ==========
+    # ======== Overloadable functions ========================================
+
+    def constructor(self, *args):
+        """
+        init-things run BEFORE the actor's thread has begun running.
+
+        This should be used instead of __init__ (which you should never
+        overload).
+        args are the subclass-specific arguments provided to __init__,
+        ie. not those defined in Actor but in the inherited subclas.
+        args may be no arguments at all.
+        """
+        pass
 
     def initialize(self):
+        """
+        Run initializing stuff AFTER the actor's thread has begun running.
+
+        If you're wondering if you want to put something in constructor()
+        or here, you most likely want it here.
+        """
         pass
 
     def main_loop(self, message):
+        """
+        The main loop for the actor. Runs every tick (specified as the timeout
+        of the inbox) or every time there is a new message.
+
+        If self.wait_for_message is True, the inbox's read() will be blocking
+        and message is guaranteed to be a message.
+        If it is False, message may be None or a message.
+        """
         pass
 
     def terminate(self):
+        """
+        Run stuff just before the actor dies. Usually only executed after
+        stop() was called.
+
+        This is not terribly useful but might be to some.
+        """
         pass
 
-    # =========================================
+    # ========================================================================
 
-    # ======== Take care of the kids ==========
+    # ======== Take care of the kids =========================================
 
     def make_babies(self, *names_and_classes, use_family_name=True):
         """
@@ -114,17 +153,26 @@ class Actor(threading.Thread):
                 name, class_, *args = self.child_data[name]
                 self.children[name] = class_(self.master_inbox, name, *args)
 
-    # =========================================
-
+    # ========================================================================
 
     def stop(self):
+        """
+        Stop the actor gracefully.
+        """
         self.send('master', 'death', None)
         self.running = False
 
     def write_to(self, message):
+        """ Useless/deprecated? """
         self.inbox.write(message)
 
     def send(self, *args, sender=None):
+        """
+        Send a message to master for delivery to the specified target
+
+        sender is the actor itself if not specified. It should not be
+        specified at all most of the times.
+        """
         if not sender:
             sender = self.name
         target, subject, payload = args
@@ -132,6 +180,11 @@ class Actor(threading.Thread):
 
 
 def read_json(text):
+    """
+    Convert the raw json-text to a python data structure, ignoring
+    python-esque comments (lines starting with a #) since json doesn't
+    have native comments.
+    """
     without_comments = [line for line in text.splitlines()
                         if not line.startswith('#')]
     return json.loads('\n'.join(without_comments))
