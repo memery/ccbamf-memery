@@ -25,54 +25,57 @@ class InterpretorActor(Actor):
             elif subject == 'interpret':
                 self.spawn_worker_swarm(source, *payload)
 
-        for item in list(self.active_threads):
-            q, thread, birthdate = item
-            try:
-                data = q.get_nowait()
-            except queue.Empty:
-                pass
-            else:
-                subject, content = data
-                if subject == 'response':
-                    target, destination, response = content
-                    self.send(target, 'response', (destination, response))
-                elif subject == 'error':
-                    self.send('logger:error', None, content)
+        for thread in list(self.active_threads):
             if not thread.is_alive():
-                self.active_threads.remove(item)
+                self.active_threads.remove(thread)
 
     def spawn_worker_swarm(self, source, destination, author, content):
         for plugin_data in list_plugins():
-            q = queue.Queue()
-            timestamp = time.time()
-            worker = PluginExecutor(plugin_data, source, destination, author, content, q)
-            self.active_threads.append((q, worker, timestamp))
+            worker = PluginExecutor(plugin_data, source, destination,
+                                    author, content, self.send)
+            self.active_threads.append(worker)
             worker.start()
 
 
 
 class PluginExecutor(threading.Thread):
-    def __init__(self, plugin_data, source, destination, author, content, response_queue):
+    def __init__(self, plugin_data, source, destination, author, content, send_to_master):
         super().__init__()
         self.plugin_data = plugin_data
         self.source = source
         self.destination = destination
         self.author = author
         self.content = content
-        self.response_queue = response_queue
+        self.send_to_master = send_to_master
 
     def run(self):
         try:
             loaded_plugin = load_plugin(self.plugin_data)
+        # TODO: Make these errors much more verbose and informative!
         except ImportError:
-            self.respond('error', 'Could not import {}'.format(self.plugin_data))
+            self.send_error('Error when trying to import')
             return
-        response = loaded_plugin.run(self.author, self.content)
-        if response:
-            self.respond('response', (self.source, self.destination, response))
+        except SyntaxError:
+            self.send_error('Syntax error')
+            return
+        try:
+            response = loaded_plugin.run(self.author, self.content)
+        except Exception as e:
+            self.send_error('Exception "{}"'.format(e))
+            return
+        else:
+            if response:
+                self.respond(self.source, 'response',
+                             (self.destination, response))
 
-    def respond(self, subject, message):
-        self.response_queue.put((subject, message))
+
+    def send_error(self, error):
+        self.respond('logger:errors', 'error', error)
+
+    def respond(self, target, subject, message):
+        sender = 'plugin:{}/{}'.format(os.path.basename(self.plugin_data[1]),
+                                       self.plugin_data[0])
+        self.send_to_master(target, subject, message, sender=sender)
 
 
 def list_plugins():
@@ -80,7 +83,7 @@ def list_plugins():
     plugin_dirs = [os.path.join(root_path,d)
                    for d in os.listdir(root_path)
                    if os.path.isdir(os.path.join(root_path,d))]
-    plugins = [(os.path.splitext(f)[0], os.path.join('plugins', subdir))
+    plugins = [(os.path.splitext(f)[0], subdir)
                for subdir in plugin_dirs for f in os.listdir(subdir)
                if os.path.splitext(f)[1] == '.py']
     return plugins
