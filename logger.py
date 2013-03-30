@@ -1,6 +1,6 @@
-import common
+import flatactors
 
-class LoggerActor(common.Actor):
+class LoggerActor(flatactors.Actor):
     def initialize(self):
         self.wait_for_message = False
         self.keep_the_kids_alive = True
@@ -10,18 +10,18 @@ class LoggerActor(common.Actor):
             ('raw', RawLogger)
         )
 
-class ErrorLogger(common.Actor):
+class ErrorLogger(flatactors.Actor):
     def main_loop(self, message):
         _, source, _, payload = message
         print('~~~ERROR in {}: {}\n'.format(source, payload))
 
-class ChatLogger(common.Actor):
+class ChatLogger(flatactors.Actor):
     def main_loop(self, message):
         _, source, _, payload = message
         origin, author, contents = payload
         print('{}/{} <{}> {}'.format(source, origin, author, contents))
 
-class RawLogger(common.Actor):
+class RawLogger(flatactors.Actor):
     def main_loop(self, message):
         _, source, _, payload = message
         print('RAW {}> {}'.format(source, payload))

@@ -1,6 +1,7 @@
 from itertools import repeat
 
-from common import Actor, read_json, read_file_or_die
+from flatactors import Actor
+from common import read_json, read_file_or_die
 from irc_connection import IRCConnectionActor
 import irc_parser
 
