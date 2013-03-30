@@ -1,3 +1,7 @@
 {
-  "command_prefix": "."
+  "command_prefix": ".",
+  "plugin_blacklist": [
+    "built-in/choose",
+    "built-in/down"
+  ]
 }

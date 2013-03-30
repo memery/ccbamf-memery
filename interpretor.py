@@ -1,6 +1,6 @@
 import imp
 import os
-import os.path
+from os.path import basename, isdir, join, splitext
 import queue
 import sys
 import threading
@@ -17,8 +17,7 @@ class InterpretorActor(Actor):
         self.wait_for_message = False
         self.active_threads = []
 
-        general_settings = read_json(read_file_or_die('config/general.json'))
-        self.command_prefix = general_settings['command_prefix']
+        self.settings = read_json(read_file_or_die('config/general.json'))
 
     def main_loop(self, message):
         if message:
@@ -34,10 +33,16 @@ class InterpretorActor(Actor):
                 self.active_threads.remove(thread)
 
     def spawn_worker_swarm(self, source, destination, author, content):
-        for plugin_data in list_plugins():
-            worker = PluginExecutor(plugin_data, source, destination,
-                                    author, content,
-                                    self.command_prefix, self.send)
+        for plugin_data in list_plugins(self.settings['plugin_blacklist']):
+            worker = PluginExecutor(
+                plugin_data,
+                source,
+                destination,
+                author,
+                content,
+                self.settings['command_prefix'],
+                self.send
+            )
             self.active_threads.append(worker)
             worker.start()
 
@@ -91,19 +96,20 @@ class PluginExecutor(threading.Thread):
                             ''.format(type(result), str(result)))
 
     def respond(self, target, subject, message):
-        sender = 'plugin:{}/{}'.format(os.path.basename(self.plugin_data[1]),
+        sender = 'plugin:{}/{}'.format(basename(self.plugin_data[1]),
                                        self.plugin_data[0])
         self.send_to_master(target, subject, message, sender=sender)
 
 
-def list_plugins():
-    root_path = os.path.join(sys.path[0], 'plugins')
-    plugin_dirs = [os.path.join(root_path,d)
+def list_plugins(blacklist):
+    root_path = join(sys.path[0], 'plugins')
+    plugin_dirs = [join(root_path,d)
                    for d in os.listdir(root_path)
-                   if os.path.isdir(os.path.join(root_path,d))]
-    plugins = [(os.path.splitext(f)[0], subdir)
+                   if isdir(join(root_path,d))]
+    plugins = [(splitext(f)[0], subdir)
                for subdir in plugin_dirs for f in os.listdir(subdir)
-               if os.path.splitext(f)[1] == '.py']
+               if splitext(f)[1] == '.py'
+               and basename(subdir)+'/'+splitext(f)[0] not in blacklist]
     return plugins
 
 def load_plugin(plugin_data):
