@@ -142,7 +142,7 @@ class IRCConnectionActor(common.Actor):
             # this raises an exception,
             # and the thread will be respawned!
             # TODO: remove this obviously...
-            if 'except' in arguments:
+            if ' except' in line:
                 raise Exception
 
 

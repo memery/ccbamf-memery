@@ -56,6 +56,10 @@ class IRCMainActor(Actor):
                         if ircmessage.split()[1] == 'restart':
                             self.send(source, 'die', None)
 
+                        # TODO: Remove this completely, of course
+                        if ircmessage.split()[1] == 'ircexcept':
+                            self.send(source, 'die', None)
+
                     new_payload = (channel, nick, ircmessage)
                     self.send('interpretor', 'interpret', new_payload, sender=source)
                     self.send('logger:chat', 'log', new_payload, sender=source)
