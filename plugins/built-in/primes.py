@@ -6,7 +6,7 @@ def help():
             'description': 'Calculates prime factors.',
             'argument':    '<natural number n, where 2 < n < 100000>'}
 
-def run(nick, args):
+def run(nick, args, command_prefix):
     if not (args.startswith('.primes ') and args.lstrip('.primes ').isdigit()):
         return None
     args = args.lstrip('.primes ')
@@ -29,5 +29,3 @@ def primes(number):
             factor += 1
         number /= factor
         yield factor
-
-

@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 
+from common import read_json, read_file_or_die
 from flatactors import Actor
 
 class InterpretorActor(Actor):
@@ -15,6 +16,9 @@ class InterpretorActor(Actor):
     def initialize(self):
         self.wait_for_message = False
         self.active_threads = []
+
+        general_settings = read_json(read_file_or_die('config/general.json'))
+        self.command_prefix = general_settings['command_prefix']
 
     def main_loop(self, message):
         if message:
@@ -32,20 +36,23 @@ class InterpretorActor(Actor):
     def spawn_worker_swarm(self, source, destination, author, content):
         for plugin_data in list_plugins():
             worker = PluginExecutor(plugin_data, source, destination,
-                                    author, content, self.send)
+                                    author, content,
+                                    self.command_prefix, self.send)
             self.active_threads.append(worker)
             worker.start()
 
 
 
 class PluginExecutor(threading.Thread):
-    def __init__(self, plugin_data, source, destination, author, content, send_to_master):
+    def __init__(self, plugin_data, source, destination, author, content,
+                 command_prefix, send_to_master):
         super().__init__()
         self.plugin_data = plugin_data
         self.source = source
         self.destination = destination
         self.author = author
         self.content = content
+        self.command_prefix = command_prefix
         self.send_to_master = send_to_master
 
     def run(self):
@@ -59,7 +66,8 @@ class PluginExecutor(threading.Thread):
             self.send_error('Syntax error')
             return
         try:
-            response = loaded_plugin.run(self.author, self.content)
+            response = loaded_plugin.run(self.author, self.content,
+                                         self.command_prefix)
         except Exception as e:
             self.send_error('Exception "{}"'.format(e))
             return
