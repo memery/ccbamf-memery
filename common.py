@@ -58,7 +58,7 @@ class Actor(threading.Thread):
                 self.check_on_the_kids(msg)
             self.main_loop(msg)
 
-        self.terminate()
+        self.before_death()
 
     # ======== Overloadable functions ========================================
 
@@ -94,7 +94,7 @@ class Actor(threading.Thread):
         """
         pass
 
-    def terminate(self):
+    def before_death(self):
         """
         Run stuff just before the actor dies. Usually only executed after
         stop() was called.

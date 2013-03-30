@@ -155,6 +155,6 @@ class IRCConnectionActor(common.Actor):
             if parts:
                 self.irc.send('PART {}'.format(','.join(parts)))
 
-    def terminate(self):
+    def before_death(self):
         self.irc.send('QUIT :termination beep blarp boop')
         self.irc.sock.close()
