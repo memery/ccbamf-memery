@@ -18,6 +18,7 @@ class Socket:
         # try to connect
         try: sock.connect((server, port))
         # try really, really hard
+        # TODO: except what!?
         except: sock.send(bytes('', 'utf-8'))
 
         if ssl_enabled:
@@ -48,6 +49,7 @@ class Socket:
         def decode(text, encs):
             for enc in encs:
                 try: return text.decode(enc)
+                # TODO: except what!?
                 except: continue
             # fallback is latin-1
             return text.decode('latin-1', 'replace')
