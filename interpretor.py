@@ -73,12 +73,22 @@ class PluginExecutor(threading.Thread):
             return
         else:
             if response:
-                self.respond(self.source, 'response',
-                             (self.destination, response))
+                if isinstance(response, list) or isinstance(response, tuple):
+                    for item in response:
+                        self.send_result(item)
+                else:
+                    self.send_result(response)
 
 
     def send_error(self, error):
         self.respond('logger:errors', 'error', error)
+
+    def send_result(self, result):
+        if isinstance(result, str):
+            self.respond(self.source, 'response', (self.destination, result))
+        else:
+            self.send_error('Strange result format "{}" in data: {}'
+                            ''.format(type(result), str(result)))
 
     def respond(self, target, subject, message):
         sender = 'plugin:{}/{}'.format(os.path.basename(self.plugin_data[1]),
