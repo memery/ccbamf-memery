@@ -1,7 +1,7 @@
 import threading
 import queue
 
-from common import Actor
+from flatactors import Actor
 
 class InterpretorActor(Actor):
     def constructor(self):

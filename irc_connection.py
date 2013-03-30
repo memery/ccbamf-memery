@@ -2,6 +2,7 @@
 import socket
 import ssl
 from time import sleep
+import flatactors
 import common
 import irc_parser
 
@@ -59,7 +60,7 @@ class Socket:
                 for byteline in bytelines]
 
 
-class IRCConnectionActor(common.Actor):
+class IRCConnectionActor(flatactors.Actor):
 
     def constructor(self, host, irc_settings):
         self.host = host
