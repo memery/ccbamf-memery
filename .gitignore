@@ -37,4 +37,5 @@ nosetests.xml
 
 # project specific
 *.json
-
+plugins/*
+!plugins/built-in
