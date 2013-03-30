@@ -53,16 +53,25 @@ class Actor(threading.Thread):
 
         self.running = True
         while self.running:
-            if self.wait_for_message:
-                msg = self.inbox.read_wait()
-            else:
-                msg = self.inbox.read()
-            if self.keep_the_kids_alive:
-                self.check_on_the_kids(msg)
-            if self.independent:
-                self.manage_address_book(msg)
-            self.main_loop(msg)
-
+            try:
+                if self.wait_for_message:
+                    msg = self.inbox.read_wait()
+                else:
+                    msg = self.inbox.read()
+                if self.keep_the_kids_alive:
+                    self.check_on_the_kids(msg)
+                if self.independent:
+                    self.manage_address_book(msg)
+                self.main_loop(msg)
+            except Exception as e:
+                target = 'logger:errors'
+                subject = 'log'
+                payload = 'Actor crashed in or before main_loop: {}'.format(type(e))
+                if self.independent:
+                    self.address_book[target].write((target, self.name,
+                                                     subject, payload))
+                else:
+                    self.send(target, subject, payload)
         self.before_death()
 
     # ======== Overloadable functions ========================================
