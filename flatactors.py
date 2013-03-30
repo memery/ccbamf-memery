@@ -166,6 +166,12 @@ class Actor(threading.Thread):
     # ======== Manage your address book =========================================
 
     def manage_address_book(self, message):
+        """
+        Manage the central directory of subactors to this one,
+        removing actors as they die and adding them as they are
+        born. Also responsible for passing messages on to the
+        correct subactor as long as it is registered.
+        """
         target, source, subject, payload = message
         if target == self.name:
             if subject == 'quit':
