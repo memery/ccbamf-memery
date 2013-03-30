@@ -17,9 +17,6 @@ class MasterActor(Actor):
             use_family_name=False
         )
 
-    def main_loop(self, message):
-        pass
-
 
 if __name__ == "__main__":
     main_actor = MasterActor(None, 'master')

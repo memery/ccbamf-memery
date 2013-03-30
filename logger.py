@@ -13,7 +13,7 @@ class LoggerActor(flatactors.Actor):
 class ErrorLogger(flatactors.Actor):
     def main_loop(self, message):
         _, source, _, payload = message
-        print('~~~ERROR in {}: {}\n'.format(source, payload))
+        print('~~~ERROR in {}: {}'.format(source, payload))
 
 class ChatLogger(flatactors.Actor):
     def main_loop(self, message):
