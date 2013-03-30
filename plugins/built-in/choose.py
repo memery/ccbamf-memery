@@ -2,10 +2,9 @@ import common
 import random
 
 def run(nick, message, cmd_prefix):
-    if message.split(None, 1)[0] != cmd_prefix + 'choose':
-        return None
-
-    arg = message.lstrip(cmd_prefix + 'choose').strip()
+    arg = common.get_plugin_argument(message, cmd_prefix, 'choose')
+    if arg is None:
+        return
 
     if not arg:
         return '{}: nothing to choose from'.format(nick)
