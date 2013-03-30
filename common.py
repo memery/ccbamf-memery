@@ -46,6 +46,7 @@ def read_url(url, args='', quote_=True, content_whitelist=[]):
     content_whitelist -- a list of MIME types which the page's type has to be
     one of (empty list means no restriction)
     """
+    TIMEOUT = 10 # TODO: more dynamic?
 
     # Convert non-ascii chars to %xx-format
     safe = '/:;.,?+-=@#&' # These will not be converted
@@ -60,7 +61,7 @@ def read_url(url, args='', quote_=True, content_whitelist=[]):
     # Read the page and try to find the encoding in the headers
     encoding = None
     content_whitelist = None # TODO: remove this shit?
-    with urlopen(url_request(url)) as s:
+    with urlopen(url_request(url), timeout=TIMEOUT) as s:
         if content_whitelist and s.info().get_content_type() not in content_whitelist:
             return None
         # This may return None
