@@ -1,6 +1,7 @@
+from imp import reload
 import threading
 import queue
-
+import sys
 
 class Inbox:
     """
@@ -18,7 +19,7 @@ class Inbox:
 
 
 class Actor(threading.Thread):
-    def __init__(self, master_inbox, name, *args):
+    def __init__(self, master_inbox, parent, name, *args, oldvars=None):
         """
         This should never be overloaded!
 
@@ -33,6 +34,7 @@ class Actor(threading.Thread):
         else:
             self.independent = True
             self.address_book = {}
+        self.parent = parent
         self.name = name
 
         self.daemon = True # Temporary
@@ -42,6 +44,12 @@ class Actor(threading.Thread):
         self.children = {}
         # Call constructor with all the subclass-specific arguments.
         self.constructor(*args)
+        # Use the last incarnation's state if possible
+        if oldvars:
+            newvars = vars(self)
+            for k,v in oldvars.items():
+                if k in newvars and not k.startswith('_'):
+                    setattr(self, k, v)
         self.start()
 
     def run(self):
@@ -50,7 +58,6 @@ class Actor(threading.Thread):
         circumstances. Use the overloadable functions below instead.
         """
         self.initialize()
-
         self.running = True
         while self.running:
             try:
@@ -62,11 +69,12 @@ class Actor(threading.Thread):
                     self.check_on_the_kids(msg)
                 if self.independent:
                     self.manage_address_book(msg)
+                self.manage_reloading(msg)
                 self.main_loop(msg)
             except Exception as e:
                 target = 'logger:errors'
                 subject = 'log'
-                payload = 'Actor crashed in or before main_loop: {}'.format(type(e))
+                payload = 'Actor crashed in or before main_loop: {}, {}'.format(type(e), e)
                 if self.independent:
                     self.address_book[target].write((target, self.name,
                                                      subject, payload))
@@ -128,6 +136,9 @@ class Actor(threading.Thread):
 
         Add the parents name as a prefix if not told not to.
         """
+        if self.children:
+            return
+
         # Give new names to the kids, using the parent's name as prefix
         if use_family_name:
             names_and_classes = [
@@ -146,7 +157,7 @@ class Actor(threading.Thread):
 
         # Make the babies!
         self.children = {
-            name: class_(master_inbox, name, *args)
+            name: class_(master_inbox, self, name, *args)
             for name, class_, *args in names_and_classes
         }
 
@@ -221,4 +232,46 @@ class Actor(threading.Thread):
         else:
             self.master_inbox.write(message)
 
+    def report_error(self, message):
+        self.send('logger:errors', 'log', message)
 
+    # ========================================================================
+
+    # ======== Reloading =====================================================
+
+    def manage_reloading(self, message):
+        if not message:
+            return
+        target, sender, subject, payload = message
+        if target == self.name and subject == 'reload':
+            self.reload()
+
+    def reload(self):
+        if not hasattr(self, 'module_name'):
+            self.report_error('[reload] No module name specified in class')
+            return
+        try:
+            module = sys.modules[self.module_name]
+        except KeyError:
+            self.report_error('[reload] No such module')
+            return
+        if not hasattr(module, 'mainclass'):
+            self.report_error('[reload] No reincarnation class specified in module')
+            return
+        try:
+            reload(module)
+        except SyntaxError:
+            self.report_error('[reload] Syntax error when reloading, aborting')
+        else:
+            myvars = vars(self)
+            reincarnation = module.mainclass(None, self.parent,
+                                                  self.name, oldvars=myvars)
+            self.parent.children[self.name] = reincarnation
+            for child in self.children.values():
+                child.parent = reincarnation
+            self.send('logger:raw', 'log', '[reload] Done reloading, killing myself')
+            # Don't use self.stop() here since it deregisters the actor
+            # with master after the new class has already registered
+            self.running = False
+
+    # ========================================================================

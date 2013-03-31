@@ -19,4 +19,8 @@ class MasterActor(Actor):
 
 
 if __name__ == "__main__":
-    main_actor = MasterActor(None, 'master')
+    class Parent():
+        def __init__(self):
+            self.children = {}
+    p = Parent()
+    p.children['master'] = MasterActor(None, p, 'master')
