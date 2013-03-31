@@ -200,7 +200,9 @@ class Actor(threading.Thread):
         """
         Stop the actor gracefully.
         """
-        self.send('master', 'death', None)
+        # Master doesn't need to tell itself that it's dead
+        if not self.independent:
+            self.send('master', 'death', None)
         self.running = False
 
     def send(self, *args, sender=None):
@@ -213,6 +215,10 @@ class Actor(threading.Thread):
         if not sender:
             sender = self.name
         target, subject, payload = args
-        self.master_inbox.write((target, sender, subject, payload))
+        message = (target, sender, subject, payload)
+        if self.independent:
+            self.address_book[target].write(message)
+        else:
+            self.master_inbox.write(message)
 
 
