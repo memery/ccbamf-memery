@@ -1,13 +1,15 @@
 from itertools import repeat
 
-from flatactors import Actor
+import flatactors
 from common import read_json, read_file_or_die
-from irc_connection import IRCConnectionActor
+import common
+import irc_connection
 import irc_parser
 
-class IRCMainActor(Actor):
+class Irc(flatactors.Actor):
 
     def constructor(self):
+        self.module_name = 'irc'
         self.daemon = False
 
     def initialize(self):
@@ -18,7 +20,7 @@ class IRCMainActor(Actor):
 
         self.make_babies(*zip(
             self.networks,
-            repeat(IRCConnectionActor),
+            repeat(irc_connection),
             self.networks.values(),
             repeat(self.irc_settings)
         ))
@@ -60,6 +62,12 @@ class IRCMainActor(Actor):
                         # TODO: Remove this completely, of course
                         if ircmessage.split()[1] == 'ircexcept':
                             raise Exception
+
+                        if ircmessage.split()[1] == 'reload':
+                            self.send('master', 'testreload', None)
+
+                        if ircmessage.split()[1] == 'lol':
+                            self.send('master', 'test', None)
 
                     new_payload = (channel, nick, ircmessage)
                     self.send('interpretor', 'interpret', new_payload, sender=source)

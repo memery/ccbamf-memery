@@ -60,7 +60,7 @@ class Socket:
                 for byteline in bytelines]
 
 
-class IRCConnectionActor(flatactors.Actor):
+class IrcConnection(flatactors.Actor):
 
     def constructor(self, host, irc_settings):
         self.host = host

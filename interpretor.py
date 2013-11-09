@@ -6,18 +6,19 @@ import sys
 import threading
 import time
 
-from common import read_json, read_file_or_die
-from flatactors import Actor
+import common
+import flatactors
 
-class InterpretorActor(Actor):
+class Interpretor(flatactors.Actor):
     def constructor(self):
+        self.module_name = 'interpretor'
         self.daemon = False
 
     def initialize(self):
         self.wait_for_message = False
         self.active_threads = []
 
-        self.settings = read_json(read_file_or_die('config/general.json'))
+        self.settings = common.read_json(common.read_file_or_die('config/general.json'))
 
     def main_loop(self, message):
         if message:
@@ -126,3 +127,6 @@ def load_plugin(plugin_data):
             fp.close()
         except UnboundLocalError:
             pass
+
+
+mainclass = InterpretorActor

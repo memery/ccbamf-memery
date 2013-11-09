@@ -2,6 +2,7 @@ from imp import reload
 import threading
 import queue
 import sys
+import traceback
 
 class Inbox:
     """
@@ -75,6 +76,7 @@ class Actor(threading.Thread):
                 target = 'logger:errors'
                 subject = 'log'
                 payload = 'Actor crashed in or before main_loop: {}, {}'.format(type(e), e)
+                traceback.print_exc(file=sys.stdout)
                 if self.independent:
                     self.address_book[target].write((target, self.name,
                                                      subject, payload))
@@ -129,10 +131,10 @@ class Actor(threading.Thread):
 
     # ======== Take care of the kids =========================================
 
-    def make_babies(self, *names_and_classes, use_family_name=True):
+    def make_babies(self, *names_and_modules, use_family_name=True):
         """
         Take a pile of tuple arguments with the structure
-        (name, class[, *args]) and create actors from them.
+        (name, module[, *args]) and create actors from them.
 
         Add the parents name as a prefix if not told not to.
         """
@@ -141,24 +143,29 @@ class Actor(threading.Thread):
 
         # Give new names to the kids, using the parent's name as prefix
         if use_family_name:
-            names_and_classes = [
+            names_and_modules = [
                 [self.name + ':' + name] + rest
-                for name, *rest in names_and_classes
+                for name, *rest in names_and_modules
             ]
 
         # Save the raw data to be able to revive the babies if they die
         self.child_data = {
-            name: [name] + args
-            for name, *args in names_and_classes
+            name: args
+            for name, *args in names_and_modules
         }
 
         # If this IS the master, use your own inbox as master inbox
         master_inbox = self.inbox if self.independent else self.master_inbox
 
+        def get_class(module):
+            classname = ''.join([x.capitalize()
+                                for x in module.__name__.split('_')])
+            return getattr(module, classname)
+
         # Make the babies!
         self.children = {
-            name: class_(master_inbox, self, name, *args)
-            for name, class_, *args in names_and_classes
+            name: get_class(module)(master_inbox, self, name, *args)
+            for name, module, *args in names_and_modules
         }
 
     def check_on_the_kids(self, message):
@@ -178,7 +185,7 @@ class Actor(threading.Thread):
 
             # Resurrect dead kids
             elif not child.is_alive():
-                name, class_, *args = self.child_data[name]
+                class_, *args = self.child_data[name]
                 self.children[name] = class_(self.master_inbox, name, *args)
 
     # ========================================================================

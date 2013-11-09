@@ -1,6 +1,6 @@
 import flatactors
 
-class LoggerActor(flatactors.Actor):
+class Logger(flatactors.Actor):
     def initialize(self):
         self.wait_for_message = False
         self.keep_the_kids_alive = True
